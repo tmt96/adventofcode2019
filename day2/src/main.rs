@@ -27,14 +27,21 @@ fn run_program(input: &Vec<i32>, fst: i32, snd: i32) -> i32 {
     input[0]
 }
 
+fn read_input(filepath: &Path) -> std::io::Result<Vec<i32>> {
+    Ok(read_to_string(filepath)?
+        .split(',')
+        .filter_map(|s| s.parse::<i32>().ok())
+        .collect())
+}
+
 fn part1(input: &Vec<i32>) -> i32 {
     run_program(input, 12, 2)
 }
 
-fn part2(input: &Vec<i32>, final_res: i32) -> i32 {
+fn part2(input: &Vec<i32>) -> i32 {
     for noun in 0..100 {
         for verb in 0..100 {
-            if run_program(input, noun, verb) == final_res {
+            if run_program(input, noun, verb) == 19690720 {
                 return 100 * noun + verb;
             }
         }
@@ -43,13 +50,9 @@ fn part2(input: &Vec<i32>, final_res: i32) -> i32 {
 }
 
 fn main() -> std::io::Result<()> {
-    let filepath = Path::new("./input/day2.txt");
-    let input: Vec<_> = read_to_string(filepath)
-        .unwrap()
-        .split(',')
-        .filter_map(|s| s.parse::<i32>().ok())
-        .collect();
-    println!("part 1: {}", part1(&input));
-    println!("part 2: {}", part2(&input, 19690720));
+    let filepath = Path::new("./input/input.txt");
+    let modules = read_input(filepath)?;
+    println!("part 1: {}", part1(&modules));
+    println!("part 2: {}", part2(&modules));
     Ok(())
 }
