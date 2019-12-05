@@ -21,6 +21,12 @@ impl Add for Point {
     }
 }
 
+impl Point {
+    fn distance(self, other: Self) -> i32 {
+        (self.x - other.x).abs() + (self.y - other.y).abs()
+    }
+}
+
 fn intersection(segment1: &[Point], segment2: &[Point]) -> Option<Point> {
     let (point1, point2) = (segment1[0], segment1[1]);
     let (point3, point4) = (segment2[0], segment2[1]);
@@ -53,7 +59,7 @@ fn process_segment(segment: &str) -> Point {
 
 fn process_line(path: &str) -> Wire {
     let points = path
-        .split(",")
+        .split(',')
         .scan(Point { x: 0, y: 0 }, |cur_point, segment| {
             *cur_point = *cur_point + process_segment(segment);
             Some(*cur_point)
@@ -72,7 +78,7 @@ fn read_input(filepath: &Path) -> std::io::Result<Vec<Wire>> {
         .collect())
 }
 
-fn part1(input: &Vec<Wire>) -> i32 {
+fn part1(input: &[Wire]) -> i32 {
     let (wire1, wire2) = (&input[0], &input[1]);
     wire2
         .windows(2)
@@ -86,8 +92,26 @@ fn part1(input: &Vec<Wire>) -> i32 {
         .unwrap_or(0)
 }
 
-fn part2(input: &Vec<Wire>) -> i32 {
-    0
+fn part2(input: &[Wire]) -> i32 {
+    let (wire1, wire2) = (&input[0], &input[1]);
+    wire2
+        .windows(2)
+        .scan(0, |state, segment2| {
+            let (mut wire1_len, mut result) = (0, 0);
+            for segment1 in wire1.windows(2) {
+                if let Some(p) = intersection(segment1, segment2) {
+                    result = *state + wire1_len + segment2[0].distance(p) + segment1[0].distance(p);
+                    break;
+                } else {
+                    wire1_len += segment1[0].distance(segment1[1])
+                }
+            }
+            *state += segment2[0].distance(segment2[1]);
+            Some(result)
+        })
+        .filter(|&i| i > 0)
+        .min()
+        .unwrap_or(0)
 }
 
 fn main() -> std::io::Result<()> {

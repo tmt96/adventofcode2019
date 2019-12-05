@@ -14,11 +14,11 @@ fn read_input(filepath: &Path) -> std::io::Result<Vec<i32>> {
         .collect())
 }
 
-fn part1(module: &Vec<i32>) -> i32 {
+fn part1(module: &[i32]) -> i32 {
     module.iter().map(|i| max(i / 3 - 2, 0)).sum()
 }
 
-fn part2(module: &Vec<i32>) -> i32 {
+fn part2(module: &[i32]) -> i32 {
     let transform_fn = |i: &i32| -> i32 {
         let (mut i, mut result) = (*i, 0);
         while i > 0 {

@@ -1,7 +1,7 @@
 use std::fs::read_to_string;
 use std::path::Path;
 
-fn run_program(input: &Vec<i32>, fst: i32, snd: i32) -> i32 {
+fn run_program(input: &[i32], fst: i32, snd: i32) -> i32 {
     let mut input = input.to_vec();
     input[1] = fst;
     input[2] = snd;
@@ -34,14 +34,14 @@ fn read_input(filepath: &Path) -> std::io::Result<Vec<i32>> {
         .collect())
 }
 
-fn part1(input: &Vec<i32>) -> i32 {
+fn part1(input: &[i32]) -> i32 {
     run_program(input, 12, 2)
 }
 
-fn part2(input: &Vec<i32>) -> i32 {
+fn part2(input: &[i32]) -> i32 {
     for noun in 0..100 {
         for verb in 0..100 {
-            if run_program(input, noun, verb) == 19690720 {
+            if run_program(input, noun, verb) == 19_690_720 {
                 return 100 * noun + verb;
             }
         }
