@@ -1,6 +1,8 @@
 use std::fs::read_to_string;
 use std::path::Path;
 
+use itertools::Itertools;
+
 enum Mode {
     Position,
     Intermediate,
@@ -33,9 +35,10 @@ fn get_val(program: &[i32], val: usize, mode: Mode) -> i32 {
     }
 }
 
-fn run_program(program: &[i32], input: i32) -> i32 {
+fn run_program(program: &[i32], input: &[i32]) -> i32 {
     let mut program = program.to_vec();
-    let (mut i, mut input) = (0, input);
+    let mut input = input.to_vec();
+    let mut i = 0;
 
     while i < program.len() {
         let (opcode, mode_1, mode_2) = parse_instruction(program[i]);
@@ -60,11 +63,11 @@ fn run_program(program: &[i32], input: i32) -> i32 {
             }
             3 => {
                 let dst = program[i + 1];
-                program[dst as usize] = input;
+                program[dst as usize] = input.pop().unwrap();
                 i += 2;
             }
             4 => {
-                input = get_val(&program, i + 1, mode_1);
+                input.push(get_val(&program, i + 1, mode_1));
                 i += 2;
             }
             5 => {
@@ -106,7 +109,7 @@ fn run_program(program: &[i32], input: i32) -> i32 {
             ),
         }
     }
-    input
+    input[0]
 }
 
 fn read_input(filepath: &Path) -> std::io::Result<Vec<i32>> {
@@ -117,17 +120,24 @@ fn read_input(filepath: &Path) -> std::io::Result<Vec<i32>> {
 }
 
 fn part1(input: &[i32]) -> i32 {
-    run_program(input, 1)
+    (0..5)
+        .permutations(5)
+        .map(|perm| {
+            perm.iter()
+                .fold(0, |state, &x| run_program(input, &[state, x]))
+        })
+        .max()
+        .unwrap()
 }
 
 fn part2(input: &[i32]) -> i32 {
-    run_program(input, 5)
+    run_program(input, &[5])
 }
 
 fn main() -> std::io::Result<()> {
     let filepath = Path::new("./input/input.txt");
     let input = read_input(filepath)?;
     println!("part 1: {}", part1(&input));
-    println!("part 2: {}", part2(&input));
+    // println!("part 2: {}", part2(&input));
     Ok(())
 }
