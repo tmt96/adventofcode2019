@@ -51,8 +51,8 @@ fn part2(input: &[i32]) -> i32 {
 
 fn main() -> std::io::Result<()> {
     let filepath = Path::new("./input/input.txt");
-    let modules = read_input(filepath)?;
-    println!("part 1: {}", part1(&modules));
-    println!("part 2: {}", part2(&modules));
+    let input = read_input(filepath)?;
+    println!("part 1: {}", part1(&input));
+    println!("part 2: {}", part2(&input));
     Ok(())
 }
