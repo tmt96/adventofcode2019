@@ -5,7 +5,7 @@ use std::path::Path;
 use itertools::Itertools;
 
 enum ResultCode {
-    Output(i64),
+    Output(i32),
     Terminated,
 }
 
@@ -15,7 +15,7 @@ enum Mode {
 }
 
 impl Mode {
-    fn from_i64(val: i64) -> Self {
+    fn from_i32(val: i32) -> Self {
         match val {
             0 => Self::Position,
             1 => Self::Intermediate,
@@ -25,13 +25,13 @@ impl Mode {
 }
 
 struct IntCodeComputer {
-    program: Vec<i64>,
-    input: VecDeque<i64>,
+    program: Vec<i32>,
+    input: VecDeque<i32>,
     inst_pointer: usize,
 }
 
 impl IntCodeComputer {
-    fn new(program: &[i64], phase: i64) -> Self {
+    fn new(program: &[i32], phase: i32) -> Self {
         Self {
             program: program.to_vec(),
             input: VecDeque::from(vec![phase]),
@@ -39,17 +39,17 @@ impl IntCodeComputer {
         }
     }
 
-    fn parse_instruction(&self) -> (i64, Mode, Mode) {
+    fn parse_instruction(&self) -> (i32, Mode, Mode) {
         let inst = self.program[self.inst_pointer];
         let opcode = inst % 100;
         let mut inst = inst / 100;
         let mode_1 = inst % 10;
         inst /= 10;
         let mode_2 = inst % 10;
-        (opcode, Mode::from_i64(mode_1), Mode::from_i64(mode_2))
+        (opcode, Mode::from_i32(mode_1), Mode::from_i32(mode_2))
     }
 
-    fn get_val(&self, loc: usize, mode: Mode) -> i64 {
+    fn get_val(&self, loc: usize, mode: Mode) -> i32 {
         let res = self.program[loc];
         match mode {
             Mode::Intermediate => res,
@@ -57,7 +57,7 @@ impl IntCodeComputer {
         }
     }
 
-    fn run_one_turn(&mut self, input: i64) -> ResultCode {
+    fn run_one_turn(&mut self, input: i32) -> ResultCode {
         self.input.push_back(input);
         while self.inst_pointer < self.program.len() {
             let (opcode, mode_1, mode_2) = self.parse_instruction();
@@ -140,7 +140,7 @@ impl IntCodeComputer {
         unreachable!()
     }
 
-    fn run_program(&mut self, input: i64) -> i64 {
+    fn run_program(&mut self, input: i32) -> i32 {
         let mut input = input;
         while let ResultCode::Output(i) = self.run_one_turn(input) {
             input = i;
@@ -149,13 +149,13 @@ impl IntCodeComputer {
     }
 }
 
-fn cal_normal_thrust(phases: &[i64], program: &[i64]) -> i64 {
+fn cal_normal_thrust(phases: &[i32], program: &[i32]) -> i32 {
     phases.iter().fold(0, |state, &phase| {
         IntCodeComputer::new(program, phase).run_program(state)
     })
 }
 
-fn cal_thurst_with_feedback(phases: &[i64], program: &[i64]) -> i64 {
+fn cal_thurst_with_feedback(phases: &[i32], program: &[i32]) -> i32 {
     let mut computers: Vec<_> = phases
         .iter()
         .map(|&phase| IntCodeComputer::new(program, phase))
@@ -170,14 +170,14 @@ fn cal_thurst_with_feedback(phases: &[i64], program: &[i64]) -> i64 {
     unreachable!()
 }
 
-fn read_input(filepath: &Path) -> std::io::Result<Vec<i64>> {
+fn read_input(filepath: &Path) -> std::io::Result<Vec<i32>> {
     Ok(read_to_string(filepath)?
         .split(',')
-        .filter_map(|s| s.trim().parse::<i64>().ok())
+        .filter_map(|s| s.trim().parse::<i32>().ok())
         .collect())
 }
 
-fn part1(input: &[i64]) -> i64 {
+fn part1(input: &[i32]) -> i32 {
     (0..5)
         .permutations(5)
         .map(|perm| cal_normal_thrust(&perm, input))
@@ -185,7 +185,7 @@ fn part1(input: &[i64]) -> i64 {
         .unwrap()
 }
 
-fn part2(input: &[i64]) -> i64 {
+fn part2(input: &[i32]) -> i32 {
     (5..10)
         .permutations(5)
         .map(|perm| cal_thurst_with_feedback(&perm, input))
