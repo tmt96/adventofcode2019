@@ -1,4 +1,3 @@
-use std::collections::VecDeque;
 use std::fs::read_to_string;
 use std::path::Path;
 
@@ -84,8 +83,8 @@ impl IntCodeComputer {
         )
     }
 
-    fn get_val(&mut self, loc: usize, mode: Mode) -> i64 {
-        let res = *self.program.expandable_get(loc);
+    fn get_val(&mut self, pos: usize, mode: Mode) -> i64 {
+        let res = *self.program.expandable_get(pos);
         match mode {
             Mode::Immediate => res,
             Mode::Position => *self.program.expandable_get(res as usize),
@@ -95,15 +94,14 @@ impl IntCodeComputer {
         }
     }
 
-    fn set_val(&mut self, loc: usize, val: i64, mode: Mode) {
-        let res = *self.program.expandable_get(loc);
-        match mode {
-            Mode::Position => self.program.expandable_set(res as usize, val),
-            Mode::Relative => self
-                .program
-                .expandable_set((res + self.relative_base) as usize, val),
+    fn set_val(&mut self, pos: usize, val: i64, mode: Mode) {
+        let offset = *self.program.expandable_get(pos);
+        let res = match mode {
+            Mode::Position => offset,
+            Mode::Relative => offset + self.relative_base,
             _ => panic!(),
-        }
+        };
+        self.program.expandable_set(res as usize, val)
     }
 
     fn run_one_turn(&mut self, input: i64) -> ResultCode {
@@ -112,18 +110,14 @@ impl IntCodeComputer {
             let (opcode, mode_1, mode_2, mode_3) = self.parse_instruction();
             match opcode {
                 1 => {
-                    let (fst, snd) = (
-                        self.get_val(self.inst_pointer + 1, mode_1),
-                        self.get_val(self.inst_pointer + 2, mode_2),
-                    );
+                    let fst = self.get_val(self.inst_pointer + 1, mode_1);
+                    let snd = self.get_val(self.inst_pointer + 2, mode_2);
                     self.set_val(self.inst_pointer + 3, fst + snd, mode_3);
                     self.inst_pointer += 4;
                 }
                 2 => {
-                    let (fst, snd) = (
-                        self.get_val(self.inst_pointer + 1, mode_1),
-                        self.get_val(self.inst_pointer + 2, mode_2),
-                    );
+                    let fst = self.get_val(self.inst_pointer + 1, mode_1);
+                    let snd = self.get_val(self.inst_pointer + 2, mode_2);
                     self.set_val(self.inst_pointer + 3, fst * snd, mode_3);
                     self.inst_pointer += 4;
                 }
@@ -138,45 +132,35 @@ impl IntCodeComputer {
                     return ResultCode::Output(output);
                 }
                 5 => {
-                    let (fst, snd) = (
-                        self.get_val(self.inst_pointer + 1, mode_1),
-                        self.get_val(self.inst_pointer + 2, mode_2),
-                    );
-                    self.inst_pointer = if fst != 0 {
-                        snd as usize
+                    let fst = self.get_val(self.inst_pointer + 1, mode_1);
+                    let snd = self.get_val(self.inst_pointer + 2, mode_2);
+                    if fst != 0 {
+                        self.inst_pointer = snd as usize
                     } else {
-                        self.inst_pointer + 3
+                        self.inst_pointer += 3
                     }
                 }
                 6 => {
-                    let (fst, snd) = (
-                        self.get_val(self.inst_pointer + 1, mode_1),
-                        self.get_val(self.inst_pointer + 2, mode_2),
-                    );
-                    self.inst_pointer = if fst == 0 {
-                        snd as usize
+                    let fst = self.get_val(self.inst_pointer + 1, mode_1);
+                    let snd = self.get_val(self.inst_pointer + 2, mode_2);
+                    if fst == 0 {
+                        self.inst_pointer = snd as usize
                     } else {
-                        self.inst_pointer + 3
+                        self.inst_pointer += 3
                     }
                 }
                 7 => {
-                    let (fst, snd) = (
-                        self.get_val(self.inst_pointer + 1, mode_1),
-                        self.get_val(self.inst_pointer + 2, mode_2),
-                    );
-                    self.set_val(self.inst_pointer + 3, if fst < snd { 1 } else { 0 }, mode_3);
+                    let fst = self.get_val(self.inst_pointer + 1, mode_1);
+                    let snd = self.get_val(self.inst_pointer + 2, mode_2);
+                    let val = if fst < snd { 1 } else { 0 };
+                    self.set_val(self.inst_pointer + 3, val, mode_3);
                     self.inst_pointer += 4;
                 }
                 8 => {
-                    let (fst, snd) = (
-                        self.get_val(self.inst_pointer + 1, mode_1),
-                        self.get_val(self.inst_pointer + 2, mode_2),
-                    );
-                    self.set_val(
-                        self.inst_pointer + 3,
-                        if fst == snd { 1 } else { 0 },
-                        mode_3,
-                    );
+                    let fst = self.get_val(self.inst_pointer + 1, mode_1);
+                    let snd = self.get_val(self.inst_pointer + 2, mode_2);
+                    let val = if fst == snd { 1 } else { 0 };
+                    self.set_val(self.inst_pointer + 3, val, mode_3);
                     self.inst_pointer += 4;
                 }
                 9 => {
