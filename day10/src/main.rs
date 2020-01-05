@@ -11,7 +11,7 @@ fn difference((col1, row1): Position, (col2, row2): Position) -> Position {
     (col1 - col2, row1 - row2)
 }
 
-fn manhattan_len((col, row): &Position) -> i32 {
+fn manhattan_len((col, row): Position) -> i32 {
     col.abs() + row.abs()
 }
 
@@ -81,7 +81,7 @@ fn part2(input: &[Position]) -> i32 {
         .into_iter()
         .filter(|&snd_point| snd_point != loc)
         .collect();
-    positions.sort_by_key(|&pos| manhattan_len(&difference(pos, loc)));
+    positions.sort_by_key(|&pos| manhattan_len(difference(pos, loc)));
 
     let map = positions
         .iter()
