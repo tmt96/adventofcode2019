@@ -75,7 +75,6 @@ fn part1(input: &[Position]) -> i32 {
 
 fn part2(input: &[Position]) -> i32 {
     let loc = gun_loc(input).0;
-    println!("loc: col: {}, row: {}", loc.0, loc.1);
     let mut positions: Vec<_> = input
         .to_vec()
         .into_iter()
@@ -101,7 +100,6 @@ fn part2(input: &[Position]) -> i32 {
     let mut counter = 0;
     for i in (0..planet_iters.len()).cycle() {
         if let Some((col, row)) = planet_iters[i].next() {
-            println!("col: {}, row: {}", col, row);
             counter += 1;
             if counter == 200 {
                 return col * 100 + row;
