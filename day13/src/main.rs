@@ -211,6 +211,18 @@ impl From<i64> for TileType {
     }
 }
 
+impl Into<i64> for TileType {
+    fn into(self) -> i64 {
+        self as i64
+    }
+}
+
+struct Object {
+    x: i64,
+    y: i64,
+    init: bool,
+}
+
 fn read_input(filepath: &Path) -> std::io::Result<Vec<i64>> {
     Ok(read_to_string(filepath)?
         .split(',')
@@ -220,11 +232,9 @@ fn read_input(filepath: &Path) -> std::io::Result<Vec<i64>> {
 
 fn part1(input: &[i64]) -> i64 {
     let output = IntCodeComputer::new(input).run_program();
-    // println!("output: {:?}", output);
     let mut tile_map: HashMap<(i64, i64), TileType> = HashMap::new();
     for chunk in output.chunks_exact(3) {
         let (x, y, tile_id) = (chunk[0], chunk[1], chunk[2]);
-        println!("x: {}, y: {}, id: {}", x, y, tile_id);
         tile_map.insert((x, y), TileType::from(tile_id));
     }
 
@@ -234,8 +244,53 @@ fn part1(input: &[i64]) -> i64 {
         .count() as i64
 }
 
+fn get_output_triple(computer: &mut IntCodeComputer) -> Option<(i64, i64, i64)> {
+    if let ResultCode::Output(x) = computer.run_one_turn() {
+        if let ResultCode::Output(y) = computer.run_one_turn() {
+            if let ResultCode::Output(z) = computer.run_one_turn() {
+                return Some((x, y, z));
+            }
+        }
+    }
+    None
+}
+
 fn part2(input: &[i64]) -> i64 {
-    input.len() as i64
+    let mut program = input.to_vec();
+    program[0] = 2;
+    let mut computer = IntCodeComputer::new(&program);
+
+    let mut paddle = Object {
+        x: -1,
+        y: -1,
+        init: false,
+    };
+    let mut ball = Object {
+        x: -1,
+        y: -1,
+        init: false,
+    };
+    let mut score = 0;
+
+    while let Some((x, y, tile)) = get_output_triple(&mut computer) {
+        match (x, y, tile) {
+            (-1, 0, cur_score) => score = cur_score,
+            (x, y, tile) if tile == TileType::Paddle as i64 => {
+                paddle = Object { x, y, init: true };
+                if ball.init {
+                    computer.add_input((ball.x - paddle.x).signum())
+                }
+            }
+            (x, y, tile) if tile == TileType::Ball as i64 => {
+                ball = Object { x, y, init: true };
+                if paddle.init {
+                    computer.add_input((ball.x - paddle.x).signum())
+                }
+            }
+            _ => {}
+        }
+    }
+    score
 }
 
 fn main() -> std::io::Result<()> {
