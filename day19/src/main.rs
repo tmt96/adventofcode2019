@@ -220,20 +220,14 @@ fn part1(input: &[i64]) -> i64 {
 }
 
 fn part2(input: &[i64]) -> i64 {
-    // the beam could be dis-continuous in the beginning
-    // starting at a point from which it is continuous
-    let (mut x, mut y) = (5, 10);
-    loop {
-        if !in_range(input, x, y) {
+    let (mut x, mut y) = (0, 0);
+    while !in_range(input, x + 99, y) {
+        y += 1;
+        while !in_range(input, x, y + 99) {
             x += 1;
-        } else if !in_range(input, x + 99, y) {
-            y += 1;
-        } else if !in_range(input, x, y + 99) {
-            x += 1;
-        } else {
-            return x * 10000 + y;
         }
     }
+    x * 10000 + y
 }
 
 fn main() -> std::io::Result<()> {
