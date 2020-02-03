@@ -181,6 +181,7 @@ fn main() {
     println!("part 2: {}", part2(&planets));
 }
 
+#[cfg(test)]
 mod tests {
     use super::*;
 
