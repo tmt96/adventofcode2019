@@ -143,27 +143,20 @@ fn part1(state: State) -> u32 {
 
 fn part2(state: State) -> u32 {
     let duration = 200;
-    let mut all_states = vec![State::new(); duration + 1];
-    all_states[duration / 2] = state;
-    (0..duration)
-        .fold(all_states, |states, _| {
-            states
-                .iter()
-                .enumerate()
-                .map(|(j, state)| {
-                    let inner = if j == 0 { None } else { Some(states[j - 1]) };
-                    let outer = if j == duration {
-                        None
-                    } else {
-                        Some(states[j + 1])
-                    };
-                    state.next_state(outer, inner)
-                })
-                .collect()
-        })
-        .iter()
-        .map(|state| state.value.count_ones())
-        .sum()
+    let mut states = vec![State::new(); duration + 1];
+    states[duration / 2] = state;
+
+    for i in 0..duration {
+        let mut new_states = vec![State::new(); duration + 1];
+        for j in (duration - i - 1) / 2..=(duration + i + 2) / 2 {
+            let inner = if j == 0 { None } else { Some(states[j - 1]) };
+            let outer = states.get(j + 1).copied();
+            new_states[j] = states[j].next_state(outer, inner);
+        }
+        states = new_states
+    }
+
+    states.iter().map(|state| state.value.count_ones()).sum()
 }
 
 fn main() -> std::io::Result<()> {
