@@ -191,46 +191,13 @@ impl IntCodeComputer {
         }
         self.output.to_owned()
     }
-}
 
-// We treat all char as u8 for this challenge as Rust's string handling is a pita.
-fn gen_map(input: &[i64]) -> Vec<Vec<u8>> {
-    let output = IntCodeComputer::new(input).run_program();
-    let string = output.iter().map(|i| *i as u8).collect::<Vec<_>>();
-    string
-        .split(|&ch| char::from(ch) == '\n')
-        .map(|segment| segment.to_vec())
-        .filter(|segment| !segment.is_empty())
-        .collect()
-}
-
-fn convert_to_printable(map: &[Vec<u8>]) -> Vec<String> {
-    map.iter()
-        .map(|line| line.iter().map(|&ch| char::from(ch)).collect())
-        .collect()
-}
-
-fn is_path(row: usize, col: usize, map: &[Vec<u8>]) -> bool {
-    let height = map.len();
-    let width = map[0].len();
-    if row >= height || col >= width {
-        false
-    } else {
-        char::from(map[row][col]) == '#'
-    }
-}
-
-fn is_intersection(row: usize, col: usize, map: &[Vec<u8>]) -> bool {
-    let height = map.len();
-    let width = map[0].len();
-    if row == 0 || row >= height - 1 || col == 0 || col >= width - 1 {
-        false
-    } else {
-        is_path(row, col, map)
-            && is_path(row + 1, col, map)
-            && is_path(row - 1, col, map)
-            && is_path(row, col + 1, map)
-            && is_path(row, col - 1, map)
+    fn get_output_as_ascii(&self) -> String {
+        self.output
+            .iter()
+            .map(|i| *i as u8)
+            .map(char::from)
+            .collect()
     }
 }
 
@@ -241,54 +208,42 @@ fn read_input(filepath: &Path) -> std::io::Result<Vec<i64>> {
         .collect())
 }
 
-fn part1(input: &[i64]) -> i64 {
-    let map = gen_map(input);
-    // for line in convert_to_printable(&map) {
-    //     println!("{}", line)
-    // }
-    let height = map.len();
-    let width = map[0].len();
+const PROGRAM_1: &str = "NOT A J
+NOT C T
+AND D T
+OR T J
+WALK
+";
 
-    let mut result = 0;
-    for row in 0..height {
-        for col in 0..width {
-            if is_intersection(row, col, &map) {
-                result += row * col
-            }
-        }
+const PROGRAM_2: &str = "OR A J
+AND B J
+AND C J
+NOT J J
+AND D J
+OR E T
+OR H T
+AND T J
+RUN
+";
+
+fn part1(input: &[i64]) -> i64 {
+    let mut computer = IntCodeComputer::new(&input);
+    for i in PROGRAM_1.bytes().map(|ch| ch as i64) {
+        computer.add_input(i)
     }
-    result as i64
+    let res = computer.run_program();
+    // println!("{}", computer.get_output_as_ascii());
+    *res.last().unwrap()
 }
 
-// I got a relatively simple map, which made it possible to get the path by eye-balling
 fn part2(input: &[i64]) -> i64 {
-    let segment_a = "R,4,R,10,R,8,R,4\n";
-    let segment_b = "R,10,R,6,R,4\n";
-    let segment_c = "R,4,L,12,R,6,L,12\n";
-    let path = "A,B,A,B,C,B,C,A,B,C\n";
-
-    let mut program = input.to_vec();
-    program[0] = 2;
-    let mut computer = IntCodeComputer::new(&program);
-
-    for i in path.bytes().map(|ch| ch as i64) {
-        computer.add_input(i);
+    let mut computer = IntCodeComputer::new(&input);
+    for i in PROGRAM_2.bytes().map(|ch| ch as i64) {
+        computer.add_input(i)
     }
-    for i in segment_a.bytes().map(|ch| ch as i64) {
-        computer.add_input(i);
-    }
-    for i in segment_b.bytes().map(|ch| ch as i64) {
-        computer.add_input(i);
-    }
-    for i in segment_c.bytes().map(|ch| ch as i64) {
-        computer.add_input(i);
-    }
-
-    // no video
-    computer.add_input(b'n' as i64);
-    computer.add_input(b'\n' as i64);
-
-    *computer.run_program().last().unwrap()
+    let res = computer.run_program();
+    // println!("{}", computer.get_output_as_ascii());
+    *res.last().unwrap()
 }
 
 fn main() -> std::io::Result<()> {
